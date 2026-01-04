@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>MyManager School - Backoffice</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- NAVBAR (en haut) -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-logo">🎓</span>
+      <span class="brand-title">MyManager School</span>
+    </div>
+
+    <div class="topbar-right">
+      <div class="lang-switch">
+        <label for="langSelect" data-i18n="top.language">Langue :</label>
+        <select id="langSelect" onchange="switchLanguage(this.value)">
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+      <div class="user-info">
+        <span id="currentUserLabel"></span>
+        <button class="btn-secondary" onclick="logout()" data-i18n="top.logout">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <!-- MENU LATÉRAL -->
+    <aside class="sidebar">
+      <nav>
+        <button data-page="home"      onclick="showPage('home')"      class="active" data-i18n="nav.home">Accueil</button>
+        <button data-page="dashboard" onclick="showPage('dashboard')" data-i18n="nav.dashboard">Dashboard</button>
+        <button data-page="students"  onclick="showPage('students')"  data-i18n="nav.students">Étudiants</button>
+        <button data-page="teachers"  onclick="showPage('teachers')"  data-i18n="nav.teachers">Professeurs</button>
+        <button data-page="courses"   onclick="showPage('courses')"   data-i18n="nav.courses">Cours / Classes</button>
+        <button data-page="grades"    onclick="showPage('grades')"    data-i18n="nav.grades">Notes / Examens</button>
+        <button data-page="absences"  onclick="showPage('absences')"  data-i18n="nav.absences">Absences</button>
+        <button data-page="contact"   onclick="showPage('contact')"   data-i18n="nav.contact">Contact</button>
+      </nav>
+    </aside>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="container">
+
+      <!-- ACCUEIL -->
+      <div id="home" class="page">
+        <div class="hero">
+          <h1 data-i18n="home.title">👋 Bienvenue dans le Système Scolaire</h1>
+          <p data-i18n="home.subtitle">Gérez les étudiants, professeurs, classes, cours, notes et absences facilement.</p>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="dashboard" class="page hidden">
+        <h2 class="page-title" data-i18n="dashboard.title">📊 Tableau de Bord</h2>
+        <div class="grid">
+          <div class="card stats-card">
+            <h3 data-i18n="dashboard.students">👨‍🎓 Étudiants</h3>
+            <h1 id="countStudents">0</h1>
+          </div>
+          <div class="card stats-card">
+            <h3 data-i18n="dashboard.teachers">👨‍🏫 Professeurs</h3>
+            <h1 id="countTeachers">0</h1>
+          </div>
+          <div class="card stats-card">
+            <h3 data-i18n="dashboard.classes">🏫 Classes</h3>
+            <h1 id="countClasses">0</h1>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="dashboard.chart_students_level">📊 Nombre d'étudiants par niveau</h3>
+          <div class="chart-container">
+            <canvas id="chartStudentsLevel"></canvas>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3 data-i18n="dashboard.chart_students_class">📊 Répartition par classe</h3>
+            <div class="chart-container">
+              <canvas id="chartStudentsClass"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="dashboard.chart_teacher_hours">📊 Heures des professeurs</h3>
+            <div class="chart-container">
+              <canvas id="chartTeacherHours"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3 data-i18n="dashboard.chart_courses_level">📊 Cours par niveau</h3>
+            <div class="chart-container">
+              <canvas id="chartCoursesLevel"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="dashboard.chart_grades">📊 Répartition des moyennes des étudiants</h3>
+            <div class="chart-container">
+              <canvas id="chartGradesScatter"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÉTUDIANTS -->
+      <div id="students" class="page hidden">
+        <h2 class="page-title" data-i18n="students.title">👨‍🎓 Gestion des étudiants</h2>
+
+        <div class="card" id="studentFormCard">
+          <h3 data-i18n="students.form_title">Ajouter / Modifier Étudiant (Admin)</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="students.name">Nom</label>
+              <input id="sName" placeholder="Nom">
+            </div>
+            <div class="form-group">
+              <label data-i18n="students.level">Niveau</label>
+              <select id="sLevel">
+                <option value="">Sélectionner un niveau</option>
+                <option value="1ère Année">1ère Année</option>
+                <option value="2ème Année">2ème Année</option>
+                <option value="3ème Année">3ème Année</option>
+                <option value="4ème Année">4ème Année</option>
+                <option value="5ème Année">5ème Année</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-i18n="students.class">Classe</label>
+              <input id="sClass" placeholder="Classe (ex: A1, B2)">
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-primary" onclick="saveStudent()" data-i18n="common.save">Enregistrer</button>
+            <button class="btn-secondary" onclick="cancelEditStudent()" data-i18n="common.cancel">Annuler</button>
+            <button class="btn-secondary" onclick="openBulkStudentImport()" data-i18n="students.import_many">Importer plusieurs étudiants</button>
+          </div>
+        </div>
+
+        <!-- Étudiants en attente de validation (Admin) -->
+        <div class="card" id="pendingStudentsCard">
+          <h3 data-i18n="students.pending_title">Étudiants en attente de validation</h3>
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="students.name">Nom</th>
+                <th data-i18n="students.level">Niveau</th>
+                <th data-i18n="students.class">Classe</th>
+                <th data-i18n="common.actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pendingStudentsTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="students.list_title">Liste des étudiants</h3>
+
+          <!-- Barre de recherche + filtres + tri -->
+          <div class="form-row" style="margin-bottom: 10px;">
+            <div class="form-group">
+              <label data-i18n="common.search">Recherche</label>
+              <input id="searchStudent" placeholder="Rechercher par nom, niveau ou classe" oninput="applyStudentFilters()">
+            </div>
+            <div class="form-group">
+              <label data-i18n="students.filter_level">Filtrer par niveau</label>
+              <select id="filterLevel" onchange="applyStudentFilters()">
+                <option value="">Tous les niveaux</option>
+                <option value="1ère Année">1ère Année</option>
+                <option value="2ème Année">2ème Année</option>
+                <option value="3ème Année">3ème Année</option>
+                <option value="4ème Année">4ème Année</option>
+                <option value="5ème Année">5ème Année</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-i18n="students.filter_class">Filtrer par classe</label>
+              <select id="filterClass" onchange="applyStudentFilters()">
+                <option value="">Toutes les classes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-i18n="students.sort_by">Trier par</label>
+              <select id="sortStudents" onchange="applyStudentFilters()">
+                <option value="level">Niveau</option>
+                <option value="class">Classe</option>
+                <option value="name">Nom</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn-secondary" onclick="exportTableToCSV('studentsTable','etudiants.csv')" data-i18n="common.export_csv">Exporter CSV</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="students.name">Nom</th>
+                <th data-i18n="students.level">Niveau</th>
+                <th data-i18n="students.class">Classe</th>
+                <th data-i18n="common.actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTable"></tbody>
+          </table>
+
+          <div id="studentsPagination" class="pagination"></div>
+        </div>
+
+        <!-- Fenêtre d'import multiple -->
+        <div class="card hidden" id="bulkImportModal">
+          <h3 data-i18n="students.import_many">Importation multiple d'étudiants</h3>
+
+          <p data-i18n="students.import_hint">Collez une ligne par étudiant au format :</p>
+          <pre style="background:#f1f5f9;padding:8px;border-radius:6px;">
+Nom complet | Niveau | Classe
+Exemples :
+Ali Ben | 1ère Année | G1
+Sara Omar | 2ème Année | G2
+          </pre>
+
+          <textarea id="bulkStudentText" rows="6"
+            placeholder="Ali Ben | 1ère Année | G1&#10;Sara Omar | 2ème Année | G2"></textarea>
+
+          <div class="action-buttons" style="margin-top:10px;">
+            <button class="btn-primary" onclick="importBulkStudents()" data-i18n="common.import">Importer</button>
+            <button class="btn-secondary" onclick="closeBulkStudentImport()" data-i18n="common.cancel">Annuler</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DÉTAILS ÉTUDIANT (PDF) -->
+      <div id="studentDetails" class="page hidden">
+        <div class="card">
+          <h3 data-i18n="students.details_title">📄 Détails de l'étudiant</h3>
+          <div class="grid">
+            <div>
+              <h4 data-i18n="students.personal_info">Informations personnelles</h4>
+              <p><b data-i18n="students.name">Nom :</b> <span id="detailName"></span></p>
+              <p><b data-i18n="students.level">Niveau :</b> <span id="detailLevel"></span></p>
+              <p><b data-i18n="students.class">Classe :</b> <span id="detailClass"></span></p>
+            </div>
+            <div>
+              <h4 data-i18n="students.marks_summary">Notes (résumé)</h4>
+              <p><b>Maths :</b> <span id="detailMath"></span>/20</p>
+              <p><b>Physique :</b> <span id="detailPhy"></span>/20</p>
+              <p><b>Informatique :</b> <span id="detailInfo"></span>/20</p>
+              <p><b data-i18n="students.global_average">Moyenne générale :</b> <span id="detailAvg"></span>/20</p>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <h4 data-i18n="students.absences">Absences</h4>
+            <ul id="detailAbsences"></ul>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn-primary" onclick="exportPDF()" data-i18n="students.export_pdf">📄 Exporter en PDF</button>
+            <button class="btn-secondary" onclick="showPage('students')" data-i18n="common.back_list">⬅ Retour à la liste</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFESSEURS -->
+      <div id="teachers" class="page hidden">
+        <h2 class="page-title" data-i18n="teachers.title">👨‍🏫 Gestion des professeurs</h2>
+
+        <div class="card" id="teacherFormCard">
+          <h3 data-i18n="teachers.form_title">Ajouter / Modifier Professeur (Admin)</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="teachers.name">Nom</label>
+              <input id="tName" placeholder="Nom">
+            </div>
+            <div class="form-group">
+              <label data-i18n="teachers.subject">Matière</label>
+              <input id="tSubject" placeholder="Matière">
+            </div>
+            <div class="form-group">
+              <label data-i18n="teachers.hours">Heures / semaine</label>
+              <input id="tHours" type="number" min="0" placeholder="Heures / semaine">
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-primary" onclick="saveTeacher()" data-i18n="common.save">Enregistrer</button>
+            <button class="btn-secondary" onclick="cancelEditTeacher()" data-i18n="common.cancel">Annuler</button>
+            <button class="btn-secondary" onclick="openBulkTeacherImport()" data-i18n="teachers.import_many">Importer plusieurs professeurs</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="teachers.list_title">Liste des professeurs</h3>
+
+          <div class="form-row" style="margin-bottom:10px;">
+            <div class="form-group">
+              <label data-i18n="common.search">Recherche</label>
+              <input id="searchTeacher" placeholder="Nom ou matière" oninput="loadTeachers()">
+            </div>
+            <div class="form-group">
+              <label data-i18n="teachers.sort_by">Trier par</label>
+              <select id="sortTeachers" onchange="loadTeachers()">
+                <option value="name">Nom</option>
+                <option value="subject">Matière</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn-secondary" onclick="exportTableToCSV('teachersTable','professeurs.csv')" data-i18n="common.export_csv">Exporter CSV</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="teachers.name">Nom</th>
+                <th data-i18n="teachers.subject">Matière</th>
+                <th data-i18n="teachers.hours">Heures</th>
+                <th data-i18n="common.actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teachersTable"></tbody>
+          </table>
+          <div id="teachersPagination" class="pagination"></div>
+        </div>
+      </div>
+
+      <!-- Fenêtre d'import professeurs -->
+      <div class="card hidden" id="bulkTeacherModal">
+        <h3 data-i18n="teachers.import_many">Importation multiple de professeurs</h3>
+
+        <p data-i18n="teachers.import_hint">Collez une ligne par professeur au format :</p>
+        <pre style="background:#f1f5f9;padding:8px;border-radius:6px;">
+Nom complet | Matière | Heures / semaine
+Exemples :
+Karim Amrani | Mathématiques | 12
+Salma Idrissi | Physique | 10
+        </pre>
+
+        <textarea id="bulkTeacherText" rows="6"
+          placeholder="Karim Amrani | Mathématiques | 12&#10;Salma Idrissi | Physique | 10"></textarea>
+
+        <div class="action-buttons" style="margin-top:10px;">
+          <button class="btn-primary" onclick="importBulkTeachers()" data-i18n="common.import">Importer</button>
+          <button class="btn-secondary" onclick="closeBulkTeacherImport()" data-i18n="common.cancel">Annuler</button>
+        </div>
+      </div>
+
+
+      <!-- COURS -->
+      <div id="courses" class="page hidden">
+        <h2 class="page-title" data-i18n="courses.title">📘 Gestion des cours</h2>
+
+        <div class="card" id="courseFormCard">
+          <h3 data-i18n="courses.form_title">Ajouter / Modifier Cours (Admin)</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="courses.name">Nom du cours</label>
+              <input id="cName" placeholder="Nom du cours">
+            </div>
+            <div class="form-group">
+              <label data-i18n="courses.level">Niveau</label>
+              <input id="cLevel" placeholder="Niveau (ex: 3ème Année)">
+            </div>
+            <div class="form-group">
+              <label data-i18n="courses.teacher">Professeur</label>
+              <input id="cTeacher" placeholder="Professeur (ex: H. HANINI)">
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-primary" onclick="saveCourse()" data-i18n="common.save">Enregistrer</button>
+            <button class="btn-secondary" onclick="cancelEditCourse()" data-i18n="common.cancel">Annuler</button>
+            <button class="btn-secondary" onclick="openBulkCourseImport()" data-i18n="courses.import_many">Importer plusieurs cours</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="courses.list_title">Liste des cours</h3>
+
+          <div class="form-row" style="margin-bottom:10px;">
+            <div class="form-group">
+              <label data-i18n="common.search">Recherche</label>
+              <input id="searchCourse" placeholder="Cours ou niveau" oninput="loadCourses()">
+            </div>
+            <div class="form-group">
+              <label data-i18n="courses.sort_by">Trier par</label>
+              <select id="sortCourses" onchange="loadCourses()">
+                <option value="level">Niveau</option>
+                <option value="name">Nom du cours</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn-secondary" onclick="exportTableToCSV('coursesTable','cours.csv')" data-i18n="common.export_csv">Exporter CSV</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="courses.name">Cours</th>
+                <th data-i18n="courses.level">Niveau</th>
+                <th data-i18n="courses.teacher">Professeur</th>
+                <th data-i18n="common.actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="coursesTable"></tbody>
+          </table>
+          <div id="coursesPagination" class="pagination"></div>
+        </div>
+
+        <!-- fenêtre d'import multiple -->
+        <div class="card hidden" id="bulkCourseModal">
+          <h3 data-i18n="courses.import_many">Importation multiple de cours</h3>
+          <p data-i18n="courses.import_hint">Collez une ligne par cours au format :</p>
+          <pre style="background:#f1f5f9;padding:8px;border-radius:6px;">
+Nom du cours | Niveau | Professeur
+Exemples :
+Réseaux Informatiques 1 | 3ème Année | H. HANINI
+Compilation | 3ème Année | B. BADRI
+          </pre>
+
+          <textarea id="bulkCourseText" rows="6"
+            placeholder="Réseaux Informatiques 1 | 3ème Année | H. HANINI&#10;Compilation | 3ème Année | B. BADRI"></textarea>
+
+          <div class="action-buttons" style="margin-top:10px;">
+            <button class="btn-primary" onclick="importBulkCourses()" data-i18n="common.import">Importer</button>
+            <button class="btn-secondary" onclick="closeBulkCourseImport()" data-i18n="common.cancel">Annuler</button>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- NOTES / EXAMENS -->
+      <div id="grades" class="page hidden">
+        <h2 class="page-title" data-i18n="grades.title">🎓 Notes des étudiants</h2>
+
+        <!-- Filtre par niveau -->
+        <div class="card" style="margin-bottom: 15px;">
+          <label for="gradeLevelFilter"><b data-i18n="grades.filter_level">Filtrer par niveau</b></label>
+          <select id="gradeLevelFilter" onchange="loadGrades()">
+            <option value="1ère Année">1ère Année</option>
+            <option value="2ème Année">2ème Année</option>
+            <option value="3ème Année">3ème Année</option>
+            <option value="4ème Année">4ème Année</option>
+            <option value="5ème Année">5ème Année</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="action-buttons">
+            <button class="btn-secondary" onclick="exportTableToCSV('gradesTable','notes.csv')" data-i18n="common.export_csv">Exporter CSV</button>
+          </div>
+          <table>
+            <thead id="gradesHead"></thead>
+            <tbody id="gradesTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+
+      <!-- ABSENCES -->
+      <div id="absences" class="page hidden">
+        <h2 class="page-title" data-i18n="absences.title">📋 Gestion des absences</h2>
+
+        <div class="card" id="absenceFormCard">
+          <h3 data-i18n="absences.form_title">Ajouter une absence (Admin + Prof)</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="students.name">Étudiant</label>
+              <select id="aStudent"></select>
+            </div>
+            <div class="form-group">
+              <label data-i18n="absences.date">Date</label>
+              <input type="date" id="aDate">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="addAbsence()" data-i18n="absences.add_btn">Ajouter absence</button>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="absences.list_title">Liste des absences</h3>
+
+          <div class="action-buttons">
+            <button class="btn-secondary" onclick="exportTableToCSV('absencesTable','absences.csv')" data-i18n="common.export_csv">Exporter CSV</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="students.name">Étudiant</th>
+                <th data-i18n="absences.date">Date</th>
+                <th data-i18n="common.actions">Action</th>
+              </tr>
+            </thead>
+            <tbody id="absencesTable"></tbody>
+          </table>
+          <div id="absencesPagination" class="pagination"></div>
+        </div>
+      </div>
+
+      <!-- CONTACT -->
+      <div id="contact" class="page hidden">
+        <h2 class="page-title" data-i18n="contact.title">📩 Nous contacter</h2>
+        <div class="card">
+          <div class="form-group">
+            <label data-i18n="contact.your_name">Votre nom</label>
+            <input id="contactName" placeholder="Votre nom">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input id="contactEmail" placeholder="Email">
+          </div>
+          <div class="form-group">
+            <label data-i18n="contact.message">Message</label>
+            <textarea id="contactMessage" rows="4" placeholder="Message"></textarea>
+          </div>
+          <button class="btn-primary" data-i18n="contact.send_btn">Envoyer le message</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer>©️ 2025 — MyManager School • Projet Étudiant</footer>
+</div>
+
+<!-- Librairies externes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
