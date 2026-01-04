@@ -1,7 +1,7 @@
 ## Avancement du projet
 
 - ✅ Jour 1 : Cahier de charges (docs/cahier_de_charges.tex)
-- ⏳ Jour 2 : Structure HTML des pages (index, app, register)
+- ✅ Jour 2 : Structure HTML des pages (index, app, register)
      - `index.html` : page de connexion  
      - `register.html` : page d’inscription  
      - `app.html` : squelette de l'application (pages, navigation, sections)
