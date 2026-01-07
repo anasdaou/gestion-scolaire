@@ -3,7 +3,7 @@
 - ✅ Jour 1 : Cahier de charges (docs/cahier_de_charges.tex)
 - ✅ Jour 2 : Structure HTML des pages (index, app, register)
 - ✅ Jour 3 : CSS global (layout, header, navigation)
-- ⏳ Jour 4 : Authentification (auth.js, localStorage)
+- ✅ Jour 4 : Authentification (auth.js, localStorage)
 - ⏳ Jour 5 : Gestion des étudiants (CRUD, import)
 - ⏳ Jour 6 : Gestion des professeurs
 - ⏳ Jour 7 : Gestion des cours
